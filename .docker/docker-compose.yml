@@ -1,0 +1,21 @@
+version: '3'
+# define all services
+services: 
+  allhome:
+    container_name: allhome
+    build: .
+    image: allhome:latest
+    environment: 
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    ports:
+      - 8084:80
+      #- 449:443
+    volumes: 
+      - ./../:/var/www/html # put the contents of the current directory in the container var/www/html
+    networks:
+      - database_network
+networks:
+  database_network:
+    name: database_network
+    external: true
