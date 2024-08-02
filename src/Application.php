@@ -103,6 +103,13 @@ class Application extends BaseApplication
                 'httponly' => true,
             ]));
 
+            // if (php_sapi_name() === 'cli' || !defined('TEST_ENVIRONMENT')) {
+            //     // Apply CSRF middleware in non-test environments
+            //     $middlewareQueue->add(new CsrfProtectionMiddleware([
+            //         'httpOnly' => true,
+            //     ]));
+            // }
+
         return $middlewareQueue;
     }
 

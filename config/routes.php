@@ -23,6 +23,7 @@
 
 use Cake\Routing\Route\DashedRoute;
 use Cake\Routing\RouteBuilder;
+use Cake\Routing\Router;
 
 return static function (RouteBuilder $routes) {
     /*
@@ -88,4 +89,20 @@ return static function (RouteBuilder $routes) {
      * });
      * ```
      */
+
+
+ 
+  
+    
+     $routes->scope('/mobileapi',['prefix'=>'MobileApi'], function (RouteBuilder $builder): void {
+        // Parse specified extensions from URLs to enable formats like /controller/action.json
+         $builder->setExtensions(['json', 'xml']);
+         // Fallback to DashedRoute for other actions and controllers under the '/api/Api' prefix.
+         $builder->fallbacks(DashedRoute::class);
+   });
+
+ 
+    
+      
+    
 };
