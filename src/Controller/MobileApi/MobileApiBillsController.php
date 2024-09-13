@@ -105,6 +105,7 @@ class MobileApiBillsController extends MobileApiController
                     $transformedData = ArrayUtilities::convertCamelToSnake($data);
 
                  
+                    
 
                     // Create a new entity with the transformed data and validate it
                     $billEntity = $billsTable->newEntity($transformedData, ['validate' => 'default']);
