@@ -41,6 +41,17 @@ public function createSuccessResponse(string $message): Response
     return $this->createJsonResponse($responseData);
 }
 
+public function createSuccessResponseWithArray(string $message, array $successMessageArray): Response
+{
+    $responseData = [
+        'is_success' => true,
+        'message' => $message,
+        'data' => $successMessageArray
+    ];
+
+    return $this->createJsonResponse($responseData);
+}
+
 /**
  * Creates an error response with the provided message.
  *
@@ -56,6 +67,7 @@ public function createErrorResponse(string $message): Response
 
     return $this->createJsonResponse($responseData);
 }
+
 
 public function createErrorResponseForArray(string $message, array $errorArray):Response
 {

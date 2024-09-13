@@ -24,7 +24,9 @@ use Cake\TestSuite\TestCase;
 use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
-
+use App\Utility\ArrayUtilities;
+use Cake\I18n\FrozenDate;
+use Cake\I18n\FrozenTime;
 
 class MobileApiBillsControllerTest extends TestCase
 {
@@ -39,331 +41,535 @@ class MobileApiBillsControllerTest extends TestCase
         parent::setUp();
     }
 
-    // public function testDatabaseConnection()
-    // {
-    //     $connection = ConnectionManager::get('test');
-    //     $isConnected = false;
-
-    //     try {
-    //         // Perform a simple query to check the connection
-            
-    //         $result = $connection->execute('SHOW TABLES')->fetchAll();
-    //         debug($result);
-    //         if (!empty($result)) {
-    //             $isConnected = true;
-    //         }
-    //     } catch (\Exception $e) {
-
-    //         debug($e->getMessage());
-    //         $isConnected = false;
-    //     }
-    //     $this->assertTrue($isConnected, 'Database connection should be established.');
-    // }
+    public function tearDown(): void
+    {
+        // Clear table data after each test method
+        $this->clearBillsPaymentsTable();
+        
+        parent::tearDown();
+    }
     
-    public function testIndex()
+    /**
+     * Clear all records from the BillsPayments table.
+     *
+     * @return void
+     */
+    protected function clearBillsPaymentsTable(): void
     {
-        $this->configRequest([
-            'headers' => [
-                'Accept' => 'application/json'
+        $billsTable = TableRegistry::getTableLocator()->get('Bills');
+        $billsTable->deleteAll([]);
+    }
+    public function dataProvider()
+    {
+        $uniqueIds = [
+            '05a8e00d-43ac-49e6-a84b-22478171a187',
+            '07b8f00d-53bc-49e6-a85b-23478172b197',
+            '09c8f00d-63dc-49e6-a95b-24478183c298'
+        ];
+        // Define initial data to be saved as existing records in the database
+        $initialDataWithThreeRecord = [
+            [
+                'amount' => 500.0,
+                'category' => 'Category',
+                'dueDate' => '2024-07-20 00:00:00',
+                'groupUniqueId' => '68500b8f-0fdb-41a1-8cbe-3826cf783aa9',
+                'imageName' => '',
+                'isRecurring' => 0,
+                'name' => 'Electric',
+                'repeatBy' => '',
+                'repeatCount' => 0,
+                'repeatEvery' => 0,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 1,
+                'uniqueId' => $uniqueIds[0],
+            ],
+            [
+                'amount' => 750.0,
+                'category' => 'Utilities',
+                'dueDate' => '2024-08-15 00:00:00',
+                'groupUniqueId' => '1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p',
+                'imageName' => 'water_bill.png',
+                'isRecurring' => 1,
+                'name' => 'Water Bill',
+                'repeatBy' => 'day',
+                'repeatCount' => 30,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[1],
+            ],
+            [
+                'amount' => 1200.0,
+                'category' => 'Rent',
+                'dueDate' => '2024-09-01 00:00:00',
+                'groupUniqueId' => '7g8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v',
+                'imageName' => 'rent_receipt.png',
+                'isRecurring' => 1,
+                'name' => 'Monthly Rent',
+                'repeatBy' => 'month',
+                'repeatCount' => 12,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-09-01 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[2],
             ]
-        ]);
-
-        $controller = new MobileApiBillsController();
-        $request = new ServerRequest();
-        $controller->setRequest($request);
-        $response = $controller->computeRecord();
-
-        
-        
-        $body = $response->getBody();
-        // Rewind the stream to read the body contents
-        $body->rewind();
-        $actualBodyContents = $body->getContents();
- 
-        $this->assertInstanceOf('Cake\Http\Response', $response);
-        $this->assertEquals('application/json', $response->getType());
-
-         // Assert the response body is the expected JSON
-         $expectedBody = json_encode(['message' => 'Welcome to the Mobile API!']);
-         $this->assertEquals($expectedBody, $actualBodyContents);
-       
-    }
-
-    public function testIndexGet()
-    {
-        $this->get('/mobileapi/MobileApiBills/computeRecord');
-        $this->assertResponseCode(200);
-        $this->assertContentType('application/json');
-        $this->assertResponseContains('"message":"Welcome to the Mobile API!"');
-    }
-    public function testAddSuccess()
-    {
-
-        $this->enableCsrfToken();
-
-        $recordUniqueIds = ['1234567','12345678'];
-         // Prepare the data to be sent in the request
-         $data = [
+        ];
+        $initialDataWithTwoRecord = [
             [
-                'unique_id' => $recordUniqueIds[0],
-                'group_unique_id' => 'group123',
-                'amount' => 150.75,
-                'name' => 'Electric Bill',
-                'category' => 'Utilities',
-                'due_date' => '2024-08-01 12:00:00',
-                'is_recurring' => 1,
-                'repeat_every' => 1,
-                'repeat_by' => 'month',
-                'repeat_until' => '2025-08-01 12:00:00',
-                'repeat_count' => 12,
-                'image_name' => 'electric_bill.jpg',
-                'status' => 0,
-                'uploaded' => 0,
-                'created' => '2024-07-25 12:00:00',
-                'modified' => '2024-07-25 12:00:00',
+                'amount' => 500.0,
+                'category' => 'Category',
+                'dueDate' => '2024-07-20 00:00:00',
+                'groupUniqueId' => '68500b8f-0fdb-41a1-8cbe-3826cf783aa9',
+                'imageName' => '',
+                'isRecurring' => 0,
+                'name' => 'Electric',
+                'repeatBy' => '',
+                'repeatCount' => 0,
+                'repeatEvery' => 0,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 1,
+                'uniqueId' => $uniqueIds[0],
             ],
             [
-                'unique_id' => $recordUniqueIds[1],
-                'group_unique_id' => 'group123',
-                'amount' => 150.75,
-                'name' => 'Electric Bill',
+                'amount' => 750.0,
                 'category' => 'Utilities',
-                'due_date' => '2024-08-01 12:00:00',
-                'is_recurring' => 1,
-                'repeat_every' => 1,
-                'repeat_by' => 'month',
-                'repeat_until' => '2025-08-01 12:00:00',
-                'repeat_count' => 12,
-                'image_name' => 'electric_bill.jpg',
+                'dueDate' => '2024-08-15 00:00:00',
+                'groupUniqueId' => '1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p',
+                'imageName' => 'water_bill.png',
+                'isRecurring' => 1,
+                'name' => 'Water Bill',
+                'repeatBy' => 'day',
+                'repeatCount' => 30,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-08-15 00:00:00',
                 'status' => 0,
-                'uploaded' => 0,
-                'created' => '2024-07-25 12:00:00',
-                'modified' => '2024-07-25 12:00:00',
+                'uniqueId' => $uniqueIds[1],
             ],
-            
+            [
+                'amount' => 1200.0,
+                'category' => 'Rent',
+                'dueDate' => '2024-09-01 00:00:00',
+                'groupUniqueId' => '7g8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v',
+                'imageName' => 'rent_receipt.png',
+                'isRecurring' => 1,
+                'name' => 'Monthly Rent',
+                'repeatBy' => 'month',
+                'repeatCount' => 12,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-09-01 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[2],
+            ]
+        ];
+         // Define edited test data for bill records
+         $editedData = [
+            [
+                'amount' => 5000,
+                'category' => 'Category',
+                'dueDate' => '2024-07-20 00:00:00',
+                'groupUniqueId' => '68500b8f-0fdb-41a1-8cbe-3826cf783aa9',
+                'imageName' => '',
+                'isRecurring' => 0,
+                'name' => 'Electric edited',
+                'repeatBy' => '',
+                'repeatCount' => 0,
+                'repeatEvery' => 0,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 1,
+                'uniqueId' => $uniqueIds[0],
+            ],
+            [
+                'amount' => 7500,
+                'category' => 'Utilities',
+                'dueDate' => '2024-08-15 00:00:00',
+                'groupUniqueId' => '1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p',
+                'imageName' => 'water_bill.png',
+                'isRecurring' => 1,
+                'name' => 'Water Bill edited',
+                'repeatBy' => 'day',
+                'repeatCount' => 30,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[1],
+            ],
+            [
+                'amount' => 12000,
+                'category' => 'Rent',
+                'dueDate' => '2024-09-01 00:00:00',
+                'groupUniqueId' => '7g8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v',
+                'imageName' => 'rent_receipt.png',
+                'isRecurring' => 1,
+                'name' => 'Monthly Rent edited',
+                'repeatBy' => 'month',
+                'repeatCount' => 12,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-09-01 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[2],
+            ]
         ];
 
-        
-        $this->post('/mobileapi/MobileApiBills/add', $data);
-       
-        // Assert the response
-        $this->assertResponseOk();
-        $this->assertContentType('application/json');
-        
+        return [
+            
+                'initialDataWithThreeRecord'=>$initialDataWithThreeRecord, 
+                'initialDataWithTwoRecord'=>$initialDataWithTwoRecord, 
+                'editedData'=>$editedData, 
+                'uniqueIds'=>$uniqueIds
+        ];
+    }
+    /**
+     * Test case for the `uploadBills` method.
+     * 
+     * This test ensures that the `uploadBills` method successfully inserts bill records into the database
+     * and that the response returned is accurate. It validates the response from the `uploadBills` endpoint
+     * and checks that the records are correctly inserted and match the provided data.
+     * 
+     * @return void
+     */
+    public function testUploadBills_1()
+    {
+        // Define unique IDs for test records to avoid duplication and ensure correct matching
+        $uniqueIds = [
+            '05a8e00d-43ac-49e6-a84b-22478171a187',
+            '07b8f00d-53bc-49e6-a85b-23478172b197',
+            '09c8f00d-63dc-49e6-a95b-24478183c298'
+        ];
+
+        // Define test data for bill records
+        $data = [
+            [
+                'amount' => 500.0,
+                'category' => 'Category',
+                'dueDate' => '2024-07-20 00:00:00',
+                'groupUniqueId' => '68500b8f-0fdb-41a1-8cbe-3826cf783aa9',
+                'imageName' => '',
+                'isRecurring' => 0,
+                'name' => 'Electric',
+                'repeatBy' => '',
+                'repeatCount' => 0,
+                'repeatEvery' => 0,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 1,
+                'uniqueId' => $uniqueIds[0],
+            ],
+            [
+                'amount' => 750.0,
+                'category' => 'Utilities',
+                'dueDate' => '2024-08-15 00:00:00',
+                'groupUniqueId' => '1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p',
+                'imageName' => 'water_bill.png',
+                'isRecurring' => 1,
+                'name' => 'Water Bill',
+                'repeatBy' => 'day',
+                'repeatCount' => 30,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[1],
+            ],
+            [
+                'amount' => 1200.0,
+                'category' => 'Rent',
+                'dueDate' => '2024-09-01 00:00:00',
+                'groupUniqueId' => '7g8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v',
+                'imageName' => 'rent_receipt.png',
+                'isRecurring' => 1,
+                'name' => 'Monthly Rent',
+                'repeatBy' => 'month',
+                'repeatCount' => 12,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-09-01 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[2],
+            ]
+        ];
+
+        // Send a POST request to the `uploadBills` endpoint with the test data
+        $this->post('/mobileapi/MobileApiBills/uploadBills', $data);
+
         // Decode the JSON response
         $responseData = json_decode((string)$this->_response->getBody(), true);
 
-        // Assert the response data
-        $this->assertTrue($responseData['is_success']);
-        $this->assertEquals('Bills save successfully.', $responseData['message']);
+        // Assert that the response indicates success
+        $this->assertTrue($responseData['is_success'], 'The response should indicate success.');
+        $this->assertEquals('Bill saved successfully.', $responseData['message'], 'The success message should match.');
+        $this->assertCount(count($uniqueIds), $responseData['data'], 'The number of saved records should match the number of unique IDs.');
 
-        // Verify that the data was saved in the database
+        // Get the BillsPayments table instance
         $billsTable = TableRegistry::getTableLocator()->get('Bills');
-        $query = $billsTable->find()->where(['unique_id IN' => [$recordUniqueIds[0], $recordUniqueIds[1]]]);
+
+        // Query the database for records with the specified unique IDs
+        $query = $billsTable->find()->where(['unique_id IN' => $uniqueIds]);
+        $query->enableHydration(false);
         $records = $query->toArray();
-        $this->assertCount(2, $records, 'The query should return two records.');
-        // Assert properties or values for each record
-        $this->assertEquals($recordUniqueIds[0], $records[0]->unique_id);
-        $this->assertEquals($recordUniqueIds[1], $records[1]->unique_id);
-       
+
+        // Assert that the number of records retrieved matches the number of records inserted
+        $this->assertCount(count($data), $records, 'The number of records in the database should match the number of test records.');
+
+        // Compare each field in the initial data with the corresponding field in the database records
+        foreach ($data as $index => $expectedRecord) {
+            // Convert camelCase keys to snake_case for database comparison
+            $expectedRecordSnakeCase = ArrayUtilities::convertCamelToSnake($expectedRecord);
+
+            foreach ($expectedRecordSnakeCase as $key => $expectedValue) {
+                // Compare each field in the database record with the expected value
+                $actualValue = $records[$index][$key];
+
+                if ($actualValue instanceof FrozenTime) {
+                    // Format datetime fields for comparison
+                    $formattedDatetime = (new \Cake\I18n\FrozenTime($actualValue))->i18nFormat('yyyy-MM-dd HH:mm:ss');
+                    $this->assertEquals($expectedValue, $formattedDatetime, "The value for '$key' does not match.");
+                } else {
+                    $this->assertEquals($expectedValue, $actualValue, "The value for '$key' does not match.");
+                }
+            }
+        }
     }
-
-
     /**
-     * Test case for testing the error scenario when adding bills.
+     * Tests the functionality of updating existing bill records in the database.
      *
-     * This test case verifies that when attempting to add bills with duplicate unique IDs,
-     * the operation fails, and no records are saved in the database.
+     * This function simulates a scenario where bill records already exist in the database.
+     * It first saves initial data to represent these existing records, then sends a POST request to the `uploadBills` endpoint with modified data. 
+     * The function then verifies:
+     * 1. That the response from the POST request indicates a successful operation.
+     * 2. That the database records have been correctly updated with the modified data.
+     * 3. That each field in the updated records matches the expected values.
      */
-
-    public function testAddError()
+    public function testUploadBills_2()
     {
+        // Get the BillsPayments table instance
+        $billsTable = TableRegistry::getTableLocator()->get('Bills');
 
-        $this->enableCsrfToken();
-
-        $recordUniqueIds = ['123456789','123456789'];
-         // Prepare the data to be sent in the request
-         $data = [
-            [
-                'unique_id' => $recordUniqueIds[0],
-                'group_unique_id' => 'group123',
-                'amount' => 150.75,
-                'name' => 'Electric Bill',
-                'category' => 'Utilities',
-                'due_date' => '2024-08-01 12:00:00',
-                'is_recurring' => 1,
-                'repeat_every' => 1,
-                'repeat_by' => 'month',
-                'repeat_until' => '2025-08-01 12:00:00',
-                'repeat_count' => 12,
-                'image_name' => 'electric_bill.jpg',
-                'status' => 0,
-                'uploaded' => 0,
-                'created' => '2024-07-25 12:00:00',
-                'modified' => '2024-07-25 12:00:00',
-            ],
-            [
-                'unique_id' => $recordUniqueIds[1],
-                'group_unique_id' => 'group123',
-                'amount' => 150.75,
-                'name' => 'Electric Bill',
-                'category' => 'Utilities',
-                'due_date' => '2024-08-01 12:00:00',
-                'is_recurring' => 1,
-                'repeat_every' => 1,
-                'repeat_by' => 'month',
-                'repeat_until' => '2025-08-01 12:00:00',
-                'repeat_count' => 12,
-                'image_name' => 'electric_bill.jpg',
-                'status' => 0,
-                'uploaded' => 0,
-                'created' => '2024-07-25 12:00:00',
-                'modified' => '2024-07-25 12:00:00',
-                ],
-            
+        // Define unique IDs for test records to avoid duplication and ensure correct matching
+        $uniqueIds = [
+            '05a8e00d-43ac-49e6-a84b-22478171a187',
+            '07b8f00d-53bc-49e6-a85b-23478172b197',
+            '09c8f00d-63dc-49e6-a95b-24478183c298'
         ];
 
-        
-        $this->post('/mobileapi/MobileApiBills/add', $data);
-       
-        // Assert the response
-        $this->assertResponseOk();
-        $this->assertContentType('application/json');
-
-        // Decode the JSON response
-        $responseData = json_decode((string)$this->_response->getBody(), true);
-
-        // Assert the response data
-        $this->assertFalse($responseData['is_success']);
-        $this->assertEquals('Bills are failed to save.', $responseData['message']);
-
-        // Verify that the data was saved in the database
-        $billsTable = TableRegistry::getTableLocator()->get('Bills');
-        $query = $billsTable->find()->where(['unique_id IN' => [$recordUniqueIds[0], $recordUniqueIds[1]]]);
-        $records = $query->toArray();  
-        $this->assertCount(0, $records, 'The query should return two records.');
-      
-    }
-
-    /**
-     * Test case for testing the error scenario when adding three bills with two bills having the same unique ID.
-     *
-     * This test case verifies that when attempting to add three bills, where two of them have the same unique ID,
-     * the operation fails, and no records are saved in the database.
-     */
-    public function testAddThreeRecordWithTwoRecordHaveSameUniqueIdError()
-    {
-
-        $this->enableCsrfToken();
-
-        $recordUniqueIds = ['123456799','123456788','123456788'];
-         // Prepare the data to be sent in the request
-         $data = [
+        // Define initial data to be saved as existing records in the database
+        $initialData = [
             [
-                'unique_id' => $recordUniqueIds[0],
-                'group_unique_id' => 'group123',
-                'amount' => 150.75,
-                'name' => 'Electric Bill',
-                'category' => 'Utilities',
-                'due_date' => '2024-08-01 12:00:00',
-                'is_recurring' => 1,
-                'repeat_every' => 1,
-                'repeat_by' => 'month',
-                'repeat_until' => '2025-08-01 12:00:00',
-                'repeat_count' => 12,
-                'image_name' => 'electric_bill.jpg',
-                'status' => 0,
-                'uploaded' => 0,
-                'created' => '2024-07-25 12:00:00',
-                'modified' => '2024-07-25 12:00:00',
+                'amount' => 500.0,
+                'category' => 'Category',
+                'dueDate' => '2024-07-20 00:00:00',
+                'groupUniqueId' => '68500b8f-0fdb-41a1-8cbe-3826cf783aa9',
+                'imageName' => '',
+                'isRecurring' => 0,
+                'name' => 'Electric',
+                'repeatBy' => '',
+                'repeatCount' => 0,
+                'repeatEvery' => 0,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 1,
+                'uniqueId' => $uniqueIds[0],
             ],
             [
-                'unique_id' => $recordUniqueIds[1],
-                'group_unique_id' => 'group123',
-                'amount' => 150.75,
-                'name' => 'Electric Bill',
+                'amount' => 750.0,
                 'category' => 'Utilities',
-                'due_date' => '2024-08-01 12:00:00',
-                'is_recurring' => 1,
-                'repeat_every' => 1,
-                'repeat_by' => 'month',
-                'repeat_until' => '2025-08-01 12:00:00',
-                'repeat_count' => 12,
-                'image_name' => 'electric_bill.jpg',
+                'dueDate' => '2024-08-15 00:00:00',
+                'groupUniqueId' => '1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p',
+                'imageName' => 'water_bill.png',
+                'isRecurring' => 1,
+                'name' => 'Water Bill',
+                'repeatBy' => 'day',
+                'repeatCount' => 30,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-08-15 00:00:00',
                 'status' => 0,
-                'uploaded' => 0,
-                'created' => '2024-07-25 12:00:00',
-                'modified' => '2024-07-25 12:00:00',
+                'uniqueId' => $uniqueIds[1],
             ],
             [
-                'unique_id' => $recordUniqueIds[2],
-                'group_unique_id' => 'group123',
-                'amount' => 150.75,
-                'name' => 'Electric Bill',
-                'category' => 'Utilities',
-                'due_date' => '2024-08-01 12:00:00',
-                'is_recurring' => 1,
-                'repeat_every' => 1,
-                'repeat_by' => 'month',
-                'repeat_until' => '2025-08-01 12:00:00',
-                'repeat_count' => 12,
-                'image_name' => 'electric_bill.jpg',
+                'amount' => 1200.0,
+                'category' => 'Rent',
+                'dueDate' => '2024-09-01 00:00:00',
+                'groupUniqueId' => '7g8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v',
+                'imageName' => 'rent_receipt.png',
+                'isRecurring' => 1,
+                'name' => 'Monthly Rent',
+                'repeatBy' => 'month',
+                'repeatCount' => 12,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-09-01 00:00:00',
                 'status' => 0,
-                'uploaded' => 0,
-                'created' => '2024-07-25 12:00:00',
-                'modified' => '2024-07-25 12:00:00',
-            ],    
-            
+                'uniqueId' => $uniqueIds[2],
+            ]
         ];
 
-        
-        $this->post('/mobileapi/MobileApiBills/add', $data);
-       
-        // Assert the response
-        $this->assertResponseOk();
-        $this->assertContentType('application/json');
+        // Convert camelCase keys to snake_case for initial data
+        $convertedInitialData = array_map(function ($item) {
+            return ArrayUtilities::convertCamelToSnake($item);
+        }, $initialData);
+
+        // Save the initial data to the database and ensure it is saved correctly
+        if (!$billsTable->saveMany($billsTable->newEntities($convertedInitialData))) {
+            $this->fail('Failed to save initial data.');
+        }
+
+        // Define edited test data for bill records
+        $editedData = [
+            [
+                'amount' => 5000,
+                'category' => 'Category',
+                'dueDate' => '2024-07-20 00:00:00',
+                'groupUniqueId' => '68500b8f-0fdb-41a1-8cbe-3826cf783aa9',
+                'imageName' => '',
+                'isRecurring' => 0,
+                'name' => 'Electric edited',
+                'repeatBy' => '',
+                'repeatCount' => 0,
+                'repeatEvery' => 0,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 1,
+                'uniqueId' => $uniqueIds[0],
+            ],
+            [
+                'amount' => 7500,
+                'category' => 'Utilities',
+                'dueDate' => '2024-08-15 00:00:00',
+                'groupUniqueId' => '1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p',
+                'imageName' => 'water_bill.png',
+                'isRecurring' => 1,
+                'name' => 'Water Bill edited',
+                'repeatBy' => 'day',
+                'repeatCount' => 30,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-08-15 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[1],
+            ],
+            [
+                'amount' => 12000,
+                'category' => 'Rent',
+                'dueDate' => '2024-09-01 00:00:00',
+                'groupUniqueId' => '7g8h9i0j-1k2l-3m4n-5o6p-7q8r9s0t1u2v',
+                'imageName' => 'rent_receipt.png',
+                'isRecurring' => 1,
+                'name' => 'Monthly Rent edited',
+                'repeatBy' => 'month',
+                'repeatCount' => 12,
+                'repeatEvery' => 1,
+                'repeatUntil' => '2025-09-01 00:00:00',
+                'status' => 0,
+                'uniqueId' => $uniqueIds[2],
+            ]
+        ];
+
+        // Send a POST request to the `uploadBills` endpoint with the edited test data
+        $this->post('/mobileapi/MobileApiBills/uploadBills', $editedData);
 
         // Decode the JSON response
         $responseData = json_decode((string)$this->_response->getBody(), true);
 
-        // Assert the response data
-        $this->assertFalse($responseData['is_success']);
-        $this->assertEquals('Bills are failed to save.', $responseData['message']);
+        // Assert that the response indicates success
+        $this->assertTrue($responseData['is_success'], 'The response should indicate success.');
+        $this->assertEquals('Bill saved successfully.', $responseData['message'], 'The success message should match.');
+        $this->assertCount(count($uniqueIds), $responseData['data'], 'The number of saved records should match the number of unique IDs.');
 
-        // Verify that the data was saved in the database
+        // Query the database for records with the specified unique IDs
+        $query = $billsTable->find()->where(['unique_id IN' => $uniqueIds]);
+        $query->enableHydration(false);
+        $records = $query->toArray();
+
+        // Assert that the number of records retrieved matches the number of records inserted
+        $this->assertCount(count($editedData), $records, 'The number of records in the database should match the number of test records.');
+
+        // Compare each field in the edited test data with the corresponding field in the database records
+        foreach ($editedData as $index => $expectedRecord) {
+            // Convert camelCase keys to snake_case for database comparison
+            $expectedRecordSnakeCase = ArrayUtilities::convertCamelToSnake($expectedRecord);
+
+            foreach ($expectedRecordSnakeCase as $key => $expectedValue) {
+                // Compare each field in the database record with the expected value
+                $actualValue = $records[$index][$key];
+
+                if ($actualValue instanceof FrozenTime) {
+                    // Format datetime fields for comparison
+                    $formattedDatetime = (new \Cake\I18n\FrozenTime($actualValue))->i18nFormat('yyyy-MM-dd HH:mm:ss');
+                    $this->assertEquals($expectedValue, $formattedDatetime, "The value for '$key' does not match.");
+                } else {
+                    $this->assertEquals($expectedValue, $actualValue, "The value for '$key' does not match.");
+                }
+            }
+        }
+    }
+    /**
+     * Tests the uploadBills endpoint functionality for updating existing records and inserting new ones.
+     * 
+     * This function simulates a scenario where some data already exists in the database.
+     * It ensures that existing data will be updated and non-existing data will be inserted correctly.
+     */
+    public function testUploadBills_3()
+    {
+        // Get the Bills table instance from TableRegistry
         $billsTable = TableRegistry::getTableLocator()->get('Bills');
-        $query = $billsTable->find()->where(['unique_id IN' => [$recordUniqueIds[0], $recordUniqueIds[1], $recordUniqueIds[2]]]);
-        $records = $query->toArray();  
-        $this->assertCount(0, $records, 'The query should return 0 records.');
-      
+
+        // Define unique IDs for test records to avoid duplication and ensure correct matching
+        $uniqueIds = $this->dataProvider()['uniqueIds'];
+
+        // Define initial data to be saved as existing records in the database
+        $initialData = $this->dataProvider()['initialDataWithThreeRecord'];
+
+        
+        // Convert camelCase keys to snake_case for initial data
+        $convertedInitialData = array_map(function ($item) {
+            return ArrayUtilities::convertCamelToSnake($item);
+        }, $initialData);
+
+        // Save the initial data to the database and ensure it is saved correctly
+        if (!$billsTable->saveMany($billsTable->newEntities($convertedInitialData))) {
+            $this->fail('Failed to save initial data.');
+        }
+
+        // Define edited test data for bill records
+        $editedData = $this->dataProvider()['editedData'];
+
+        // Send a POST request to the `uploadBills` endpoint with the edited test data
+        $this->post('/mobileapi/MobileApiBills/uploadBills', $editedData);
+
+        // Decode the JSON response
+        $responseData = json_decode((string)$this->_response->getBody(), true);
+
+        // Assert that the response indicates success
+        $this->assertTrue($responseData['is_success'], 'The response should indicate success.');
+        $this->assertEquals('Bill saved successfully.', $responseData['message'], 'The success message should match.');
+        $this->assertCount(count($uniqueIds), $responseData['data'], 'The number of saved records should match the number of unique IDs.');
+
+        // Query the database for records with the specified unique IDs
+        $query = $billsTable->find()->where(['unique_id IN' => $uniqueIds]);
+        $query->enableHydration(false);
+        $records = $query->toArray();
+
+        // Assert that the number of records retrieved matches the number of records inserted
+        $this->assertCount(count($editedData), $records, 'The number of records in the database should match the number of test records.');
+
+        // Compare each field in the edited test data with the corresponding field in the database records
+        foreach ($editedData as $index => $expectedRecord) {
+            // Convert camelCase keys to snake_case for database comparison
+            $expectedRecordSnakeCase = ArrayUtilities::convertCamelToSnake($expectedRecord);
+
+            foreach ($expectedRecordSnakeCase as $key => $expectedValue) {
+                // Compare each field in the database record with the expected value
+                $actualValue = $records[$index][$key];
+
+                if ($actualValue instanceof FrozenTime) {
+                    // Format datetime fields for comparison
+                    $formattedDatetime = (new \Cake\I18n\FrozenTime($actualValue))->i18nFormat('yyyy-MM-dd HH:mm:ss');
+                    $this->assertEquals($expectedValue, $formattedDatetime, "The value for '$key' does not match.");
+                } else {
+                    $this->assertEquals($expectedValue, $actualValue, "The value for '$key' does not match.");
+                }
+            }
+        }
     }
 
     /**
-     * Test case for testing the error scenario when adding an empty data set.
-     *
-     * This test case verifies that when attempting to add an empty data set,
-     * the operation fails with an appropriate error message.
+     * this function simulate uploading record with some missing data
      */
-    public function testAddEmpytDataError()
+    public function testUploadBulls_4()
     {
 
-        $this->enableCsrfToken();
-         // Prepare the data to be sent in the request
-         $data = [];
-        
-        $this->post('/mobileapi/MobileApiBills/add', $data);
-       
-        // Assert the response
-        $this->assertResponseOk();
-        $this->assertContentType('application/json');
-
-        // Decode the JSON response
-        $responseData = json_decode((string)$this->_response->getBody(), true);
-
-        // Assert the response data
-        $this->assertFalse($responseData['is_success']);
-        $this->assertEquals('Nothing to save.', $responseData['message']);
-
-      
     }
+   
 }

@@ -40,7 +40,8 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-       
+        // Enable CSRF token protection for the request
+        //$this->enableCsrfToken();
     }
 
     public function tearDown(): void
@@ -106,9 +107,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddBillPaymentsAddSingleBillPayments()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
-
+      
         // Define the unique IDs for the test records
         $recordUniqueIds = ['UID123456'];
 
@@ -180,9 +179,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddBillPaymentsAddMultipleBillPayments()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
-
+      
         // Define the unique IDs for the test records
         $recordUniqueIds = ['UID123456', 'UID654321'];
 
@@ -279,7 +276,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
     public function testAddBillPaymentsAddEmptyBillPaymentsError()
     {
         // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+       // $this->enableCsrfToken();
 
         // Define an empty data array for the test
         $data = [];
@@ -309,8 +306,6 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddBillPaymentsAddMultipleBillPaymentsWithSameUniqueIdError():void
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
 
         // Define the unique IDs for the test records
         $recordUniqueIds = ['UID123456', 'UID123456','UID17777'];
@@ -402,8 +397,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddBillPaymentWithImageSuccess(): void
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define the unique IDs for the test records
         $recordUniqueId = ['UID123456'];
@@ -497,8 +491,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddBillPaymentWithoutImageSuccess(): void
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define the unique IDs for the test records
         $recordUniqueId = ['UID123456'];
@@ -572,8 +565,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddBillPaymentWithInvalidImageError(): void
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define the unique IDs for the test records
         $recordUniqueId = ['UID123456'];
@@ -677,8 +669,6 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function  addBillPaymentWithImageMissingKeyActualTest(array $data, string $uniqueid, $key): void
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
 
         // Send a POST request to the endpoint with the data
         $this->post('/mobileapi/MobileApiBillsPayments/addBillPaymentWithOrWithoutImage', $data);
@@ -723,8 +713,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddBillPaymentWithImageCheckedUnintendedOutput()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define the unique ID for the test record
         $recordUniqueId = ['UID123456'];
@@ -763,8 +752,6 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddOrUpdateIfExists_1()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -867,9 +854,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      * This test ensures that the function successfully updates or adds a record without an image.
      */
     public function testAddOrUpdateIfExists_2()
-    {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+    {  
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -949,8 +934,6 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddOrUpdateIfExists_3()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -1053,8 +1036,6 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddOrUpdateIfExists_4()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -1136,8 +1117,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     function testAddOrUpdateIfExists_5()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -1215,8 +1195,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function addOrUpdateIfExists_5(array $initialData, array $newData, string $uniqueid, $key): void
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Send a POST request to the endpoint with the new data
         $this->post('/mobileapi/MobileApiBillsPayments/addOrUpdateIfExists', $newData);
@@ -1274,8 +1253,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testAddOrUpdateIfExists_6()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -1338,8 +1316,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testUpdateBillPayments_1()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -1445,8 +1422,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testUpdateBillPayments_2()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -1532,8 +1508,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testUpdateBillPayments_3()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -1614,8 +1589,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function testUpdateBillPayment_4()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Define a unique ID for the record to be tested
         $recordUniqueId = ['UID123456'];
@@ -1695,8 +1669,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
      */
     public function updateBillPayment_4(array $initialData, array $newData, string $uniqueid, $key): void
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
+
 
         // Send a POST request to the endpoint with the new data
         $this->post('/mobileapi/MobileApiBillsPayments/updateBillPayments', $newData);
@@ -1740,15 +1713,24 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
         }
     }
 
+    /**
+     * This test case checks that the `updateBillPayments` endpoint does not return any unintended output.
+     * It specifically ensures that the response is clean and contains only the expected JSON data.
+     *
+     * The test performs the following steps:
+     * - Sets up a unique ID for the test record.
+     * - Defines the data that will be sent in the POST request to the endpoint.
+     * - Captures any output that might be unintentionally echoed during the request.
+     * - Verifies that the captured output is empty, ensuring that no unexpected data is returned.
+     *
+     * @return void
+     */
     public function testUpdateBillPayment_5()
     {
-        // Enable CSRF token protection for the request
-        $this->enableCsrfToken();
-
         // Define the unique ID for the test record
         $recordUniqueId = ['UID123456'];
 
-        // Define the data to be posted to the addBillPaymentWithOrWithoutImage endpoint
+        // Define the data to be posted to the updateBillPayments endpoint
         $data = [
             'unique_id' => $recordUniqueId[0],
             'bill_unique_id' => 'BUID789012',
@@ -1765,7 +1747,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
         // Start output buffering to capture any unintended output
         ob_start();
         
-        // Send a POST request to the addBillPaymentWithOrWithoutImage endpoint with the test data
+        // Send a POST request to the updateBillPayments endpoint with the test data
         $this->post('/mobileapi/MobileApiBillsPayments/updateBillPayments', $data);
         
         // Capture the echoed output
@@ -1774,6 +1756,7 @@ class MobileApiBillsPaymentsControllerTest extends TestCase
         // Assert that no unintended output is present in the response
         $this->assertEmpty($unintendedOutput, 'Must not contain invalid output. Expected JSON data.');
     }
+
 
 
 }
